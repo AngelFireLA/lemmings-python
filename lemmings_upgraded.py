@@ -1,11 +1,15 @@
+import pygame
 import random
-import time, pygame
+import time
+
 pygame.init()
 pygame.mixer.init()
-class Jeu():
+
+
+class Jeu:
 
     def __init__(self, plan_grotte: list):
-        #Au moins ça marche dynamiquement pour n'importe quel carte, en prenant la première case libre trouvée comme entrée
+        # Au moins ça marche dynamiquement pour n'importe quel carte, en prenant la première case libre trouvée comme entrée
 
         self.index_entree: tuple = None
         self.grotte_visuelle = plan_grotte
@@ -18,9 +22,7 @@ class Jeu():
         self.lemmings_en_grotte = []
         self.lemmings_sortis = []
 
-
-        self.fenetre = pygame.display.set_mode((len(self.grotte[0])*50, len(self.grotte)*50))
-
+        self.fenetre = pygame.display.set_mode((len(self.grotte[0]) * 50, len(self.grotte) * 50))
 
     def corrige_grotte(self):
         for i in range(len(self.grotte_visuelle)):
@@ -35,45 +37,7 @@ class Jeu():
                     self.grotte[i].append(None)
                     continue
 
-
                 self.grotte[i].append(tile)
-
-    def affiche(self):
-        for line in self.grotte_visuelle:
-            for tile in line:
-                print(tile, end='')
-            print('', end='\n')
-
-    def demarrer(self):
-        self.lemmings_a_demarrer = self.lemmings.copy()
-        while True:
-            user_action = None
-            while not user_action:
-                user_action = input("Entrer votre action (t pour jouer un tour, q pour quitter, l pour ajouter un lemming,c pour continuer jusqu'à la fin) : ")
-                if not(user_action == 'l' or user_action == 't' or user_action == 'q' or user_action == 'c'):
-                    print("Action invalide")
-                    user_action = None
-            if user_action == 'q':
-                print("Aurevoir")
-                exit()
-            if user_action == 'l':
-                self.lemmings_a_demarrer.append(Lemming(self))
-                print("Vous avez", len(self.lemmings_a_demarrer), "a demarrer")
-
-            if user_action == 't':
-                self.tour()
-                for ligne in self.grotte:
-                    print(ligne)
-                print()
-            if user_action == 'c':
-                print("mode continu démarrer")
-
-                while True:
-                    for ligne in self.grotte:
-                        print(ligne)
-                    # time.sleep(0.5)
-                    self.tour()
-                    print()
 
     def demarrer_pygame(self):
         self.map_to_image()
@@ -108,7 +72,6 @@ class Jeu():
                                 print("Changed le tile", tile_x, tile_y, "a rien")
                                 self.grotte[tile_y][tile_x] = None
 
-
                                 self.map_to_image()
                                 background = pygame.image.load("output.png")
                                 self.fenetre.blit(background, (0, 0))
@@ -122,9 +85,6 @@ class Jeu():
                                 background = pygame.image.load("output.png")
                                 self.fenetre.blit(background, (0, 0))
                                 pygame.display.flip()
-
-
-
 
             self.tour()
             pygame.display.flip()
@@ -164,7 +124,6 @@ class Jeu():
             self.lemmings_en_grotte.append(self.lemmings_a_demarrer[-1])
             self.lemmings_a_demarrer.pop()
 
-
         for lemming in self.lemmings_en_grotte:
             lemming: Lemming
             self.grotte = lemming.action(self.grotte)
@@ -176,20 +135,20 @@ class Jeu():
             rect = image.get_rect()
             rect.x = lemming.pygame_x
             rect.y = lemming.pygame_y
-            #print(lemming.x, lemming.y, lemming.pygame_x, lemming.pygame_y)
             if lemming.direction == 1:
                 image = pygame.transform.flip(image, True, False)
             self.fenetre.blit(image, rect)
 
 
-class Lemming():
+class Lemming:
     def __init__(self, jeu: Jeu):
         self.jeu = jeu
-        self.pygame_x = self.jeu.index_entree[0]*50
-        self.pygame_y = self.jeu.index_entree[1]*50
-        self.x = self.pygame_x//50
-        self.y = self.pygame_y//50
+        self.pygame_x = self.jeu.index_entree[0] * 50
+        self.pygame_y = self.jeu.index_entree[1] * 50
+        self.x = self.pygame_x // 50
+        self.y = self.pygame_y // 50
         self.sorti = False
+        self.prendre_toile = random.choice([True, False])
 
         self.direction = -1
 
@@ -214,31 +173,36 @@ class Lemming():
                     afficher_grotte(grotte)
 
                 return grotte
-            if grotte[self.y + 1][self.x] == "toile":
-                self.dans_toile = False
-                self.dans_toile = random.choice([True, False])
-                if self.dans_toile:
-                    self.pygame_y += 50
-                    grotte[self.y][self.x] = None
-                    grotte[self.y + 1][self.x] = self
-                    self.y += 1
-                    afficher_grotte(grotte)
-                    self.dans_toile = False
-
-                    return grotte
-
-
         except IndexError:
             print("LE VOID")
-            print(self.x, self.y)
             afficher_grotte(grotte)
             pygame.mixer.music.load('roblox-death-sound_1.mp3')
             pygame.mixer.music.set_volume(1)  # Set the volume to 50%
             pygame.mixer.music.play()
 
             grotte[self.y][self.x] = None
-            self.pygame_y += 10
             self.sortir(grotte)
+            return grotte
+        try:
+            if grotte[self.y + 1][self.x] == "toile" and self.prendre_toile and not grotte[self.y + 2][self.x]:
+                self.pygame_y += 50
+                grotte[self.y][self.x] = None
+                grotte[self.y + 2][self.x] = self
+                self.y += 2
+                afficher_grotte(grotte)
+                self.prendre_toile = random.choice([True, False])
+
+                return grotte
+        except IndexError:
+            print("LE VOID")
+            afficher_grotte(grotte)
+            pygame.mixer.music.load('roblox-death-sound_1.mp3')
+            pygame.mixer.music.set_volume(1)  # Set the volume to 50%
+            pygame.mixer.music.play()
+
+            grotte[self.y][self.x] = None
+            self.sortir(grotte)
+            return grotte
         try:
             prochaine_case = grotte[self.y][self.x + self.direction]
 
@@ -246,33 +210,31 @@ class Lemming():
             prochaine_case = "Hors de la map"
 
         if not prochaine_case or prochaine_case == 'Sorti':
-            if prochaine_case == 'Sorti':
+            if prochaine_case == 'Sorti' and (self.x+self.direction > 0 or self.direction == 1):
                 pygame.mixer.music.load('he-he-he-haw.mp3')
+
                 pygame.mixer.music.set_volume(0.1)  # Set the volume to 50%
                 pygame.mixer.music.play()
                 grotte[self.y][self.x] = None
                 grotte = self.sortir(grotte)
                 return grotte
+            if self.x > 0 or self.direction == 1:
+                self.pygame_x += self.direction * 10
+                if self.pygame_x % 50 == 0:
+                    grotte[self.y][self.x] = None
+                    grotte[self.y][self.x + self.direction] = self
+                    self.x += self.direction
+                    afficher_grotte(grotte)
 
-
-            self.pygame_x+=self.direction*10
-            if self.pygame_x % 50 == 0:
-
-                grotte[self.y][self.x] = None
-                grotte[self.y][self.x + self.direction] = self
-                self.x+=self.direction
-                afficher_grotte(grotte)
-
-
-
-            return grotte
+                return grotte
         self.direction = -self.direction
-        self.pygame_y = self.y*50
-        self.pygame_x = self.x*50
-        pygame.mixer.music.load('ouch.mp3')
-        pygame.mixer.music.set_volume(0.5)  # Set the volume to 50%
-        pygame.mixer.music.play()
+        self.pygame_y = self.y * 50
+        self.pygame_x = self.x * 50
+        # pygame.mixer.music.load('ouch.mp3')
+        # pygame.mixer.music.set_volume(1)  # Set the volume to 50%
+        # pygame.mixer.music.play()
         return grotte
+
 
 def afficher_grotte(grotte):
     debug = False
@@ -283,24 +245,31 @@ def afficher_grotte(grotte):
             print(g)
         print()
 
+
 if __name__ == '__main__':
     grotte_lv_1 = [
-        ['#', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
-        ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
-        ['#', '#', '#', '#', '#', '#', ' ', '#', '#', '#', '#', '#', '#', '#', '#'],
-        ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', '#'],
-        ['#', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
-        ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'Sorti'],
-        ['#', '#', '#', '#', '#', '#', '#', '#', 'toile', '#', '#', '#', '#', '#', '#'],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', '#', '', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', '#', '', ' ', ' ', ' ', ' '],
-        ['#', '#', '#', '#', '#', '#', '#', '#', ' ', '#', '#', '#', '#', '#', '#'],
-        ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', '#'],
-        ['#', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
-        ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
-        ['#', '#', '#', '#', '#', '#', ' ', '#', '#', '#', '#', '#', '#', '#', '#'],
-        ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', 'Sorti', '#', ' ', ' ', ' '],
+        [' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' '],
+        ['', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '', '', '', '', '', ''],
+        ['', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
+        ['', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ''],
+        ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ''],
+        ['', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '', '', '', '', '', ''],
+        [' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' '],
+        ['', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '', '', '', '', '', ''],
+        ['', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
+        ['', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ''],
+        ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ''],
+        ['', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '', '', '', '', '', ''],
+        [' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'Sorti'],
+        ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
+
+
     ]
 
-    jeu = Jeu(grotte_lv_1)
-    jeu.demarrer_pygame()
+    jeu1 = Jeu(grotte_lv_1)
+    jeu1.demarrer_pygame()
