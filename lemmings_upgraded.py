@@ -44,7 +44,7 @@ class Jeu:
         self.lemmings_a_demarrer = self.lemmings.copy()
 
         while True:
-            background = pygame.image.load("output.png")
+            background = pygame.image.load("output.png").convert_alpha()
             self.fenetre.blit(background, (0, 0))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -159,6 +159,17 @@ class Lemming:
         self.sorti = True
         return grotte
 
+    def le_void(self, grotte):
+        print("LE VOID")
+        afficher_grotte(grotte)
+        pygame.mixer.music.load('roblox-death-sound_1.mp3')
+        pygame.mixer.music.set_volume(1)  # Set the volume to 50%
+        pygame.mixer.music.play()
+
+        grotte[self.y][self.x] = None
+        grotte = self.sortir(grotte)
+        return grotte
+
     def action(self, grotte):
 
         try:
@@ -174,18 +185,11 @@ class Lemming:
 
                 return grotte
         except IndexError:
-            print("LE VOID")
-            afficher_grotte(grotte)
-            pygame.mixer.music.load('roblox-death-sound_1.mp3')
-            pygame.mixer.music.set_volume(1)  # Set the volume to 50%
-            pygame.mixer.music.play()
+            return self.le_void(grotte)
 
-            grotte[self.y][self.x] = None
-            self.sortir(grotte)
-            return grotte
         try:
             if grotte[self.y + 1][self.x] == "toile" and self.prendre_toile and not grotte[self.y + 2][self.x]:
-                self.pygame_y += 50
+                self.pygame_y += 100
                 grotte[self.y][self.x] = None
                 grotte[self.y + 2][self.x] = self
                 self.y += 2
@@ -194,15 +198,11 @@ class Lemming:
 
                 return grotte
         except IndexError:
-            print("LE VOID")
-            afficher_grotte(grotte)
-            pygame.mixer.music.load('roblox-death-sound_1.mp3')
-            pygame.mixer.music.set_volume(1)  # Set the volume to 50%
-            pygame.mixer.music.play()
+            return self.le_void(grotte)
+        if grotte[self.y + 1][self.x] == "tank":
 
-            grotte[self.y][self.x] = None
-            self.sortir(grotte)
-            return grotte
+            return self.le_void(grotte)
+
         try:
             prochaine_case = grotte[self.y][self.x + self.direction]
 
@@ -250,9 +250,9 @@ if __name__ == '__main__':
     grotte_lv_1 = [
         [' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-        ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' '],
+        ['#', '#', '#', '#', 'toile', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' '],
         ['', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '', '', '', '', '', ''],
-        ['', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
+        ['', '#', '#', '#', 'tank', '#', ' ', '#', '#', '#', '#', '#', '#', '#', '#'],
         ['', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ''],
         ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ''],
         ['', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '', '', '', '', '', ''],
