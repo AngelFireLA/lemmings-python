@@ -42,7 +42,7 @@ class Jeu:
     def demarrer_pygame(self):
         self.map_to_image()
         self.lemmings_a_demarrer = self.lemmings.copy()
-
+        clock = pygame.time.Clock()
         while True:
             background = pygame.image.load("output.png").convert_alpha()
             self.fenetre.blit(background, (0, 0))
@@ -76,6 +76,7 @@ class Jeu:
                                 background = pygame.image.load("output.png")
                                 self.fenetre.blit(background, (0, 0))
                                 pygame.display.flip()
+                                clock.tick(30)
                         if event.button == 3:
                             tile = self.grotte[tile_y][tile_x]
                             if not tile:
@@ -85,10 +86,11 @@ class Jeu:
                                 background = pygame.image.load("output.png")
                                 self.fenetre.blit(background, (0, 0))
                                 pygame.display.flip()
+                                clock.tick(30)
 
             self.tour()
             pygame.display.flip()
-            time.sleep(0.01)
+            clock.tick(30)
 
     def map_to_image(self):
         from PIL import Image
